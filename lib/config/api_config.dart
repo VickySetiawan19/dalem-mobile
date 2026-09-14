@@ -16,10 +16,14 @@ class ApiConfig {
     required String model,
     String lang = 'ind',
     String? keyword,
+    String? year,
     int? page,
     int perpage = 10,
   }) {
     var url = '$baseUrl/list/model/$model/lang/$lang/domain/$domain';
+    if (year != null && year.isNotEmpty && year != 'Semua') {
+      url += '/year/$year';
+    }
     if (keyword != null && keyword.isNotEmpty) {
       url += '/keyword/$keyword';
     }

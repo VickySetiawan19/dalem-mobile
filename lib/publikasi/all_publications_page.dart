@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -20,6 +21,9 @@ class AllPublicationsPage extends StatefulWidget {
 class _AllPublicationsPageState extends State<AllPublicationsPage> {
   late ScrollController _scrollController;
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
+  bool _isSearchFocused = false;
+  Timer? _debounceTimer;
   String _selectedYear = 'Semua';
   String _searchQuery = '';
 
@@ -29,6 +33,7 @@ class _AllPublicationsPageState extends State<AllPublicationsPage> {
     '${DateTime.now().year - 1}',
     '${DateTime.now().year - 2}',
     '${DateTime.now().year - 3}',
+    '${DateTime.now().year - 4}',
   ];
 
   @override
@@ -36,17 +41,30 @@ class _AllPublicationsPageState extends State<AllPublicationsPage> {
     super.initState();
     _scrollController = ScrollController();
     _scrollController.addListener(_scrollListener);
+    _searchFocusNode.addListener(_onFocusChange);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<PublicationProvider>(context, listen: false)
-          .fetchPublications();
+      Provider.of<PublicationProvider>(context, listen: false).fetchPublications(
+        isRefresh: false,
+        year: _selectedYear == 'Semua' ? null : _selectedYear,
+        keyword: _searchQuery.isEmpty ? null : _searchQuery,
+      );
     });
+  }
+
+  void _onFocusChange() {
+    if (mounted) {
+      setState(() => _isSearchFocused = _searchFocusNode.hasFocus);
+    }
   }
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _scrollController.dispose();
     _searchController.dispose();
+    _searchFocusNode.removeListener(_onFocusChange);
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -57,8 +75,31 @@ class _AllPublicationsPageState extends State<AllPublicationsPage> {
         !provider.isLoading &&
         provider.hasMoreData &&
         !provider.isError) {
-      provider.fetchPublications();
+      provider.fetchMorePublications();
     }
+  }
+
+  void _executeSearch(String val) {
+    _debounceTimer?.cancel();
+    final trimmed = val.trim();
+    if (mounted) {
+      setState(() {
+        _searchQuery = trimmed;
+      });
+      Provider.of<PublicationProvider>(context, listen: false).fetchPublications(
+        isRefresh: true,
+        year: _selectedYear == 'Semua' ? null : _selectedYear,
+        keyword: trimmed.isEmpty ? null : trimmed,
+      );
+    }
+  }
+
+  void _onSearchChanged(String val) {
+    setState(() {});
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 400), () {
+      _executeSearch(val);
+    });
   }
 
   Future<void> _handleRefresh() async {
@@ -67,20 +108,7 @@ class _AllPublicationsPageState extends State<AllPublicationsPage> {
   }
 
   List<dynamic> _getFilteredPublications(List<dynamic> publications) {
-    return publications.where((item) {
-      final title = (item['title'] ?? '').toString().toLowerCase();
-      final releaseDate = (item['rl_date'] ?? '').toString();
-
-      // Search query filter
-      final matchesQuery = _searchQuery.isEmpty ||
-          title.contains(_searchQuery.toLowerCase());
-
-      // Year filter
-      final matchesYear = _selectedYear == 'Semua' ||
-          releaseDate.contains(_selectedYear);
-
-      return matchesQuery && matchesYear;
-    }).toList();
+    return publications;
   }
 
   @override
@@ -102,58 +130,105 @@ class _AllPublicationsPageState extends State<AllPublicationsPage> {
               color: Colors.white,
               child: Column(
                 children: [
-                  // Search TextField
-                  Container(
-                    height: 46,
+                  // Search Bar
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    height: 50,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: _isSearchFocused
+                            ? AppColors.primaryNavy
+                            : const Color(0xFFE2E8F0),
+                        width: _isSearchFocused ? 1.6 : 1.2,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: _isSearchFocused
+                              ? AppColors.primaryNavy.withValues(alpha: 0.12)
+                              : Colors.black.withValues(alpha: 0.03),
+                          blurRadius: _isSearchFocused ? 12 : 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
-                    child: TextField(
-                      controller: _searchController,
-                      onChanged: (val) {
-                        setState(() {
-                          _searchQuery = val.trim();
-                        });
-                      },
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 13.5,
-                        color: const Color(0xFF1E293B),
-                        fontWeight: FontWeight.w500,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: 'Cari judul publikasi...',
-                        hintStyle: GoogleFonts.plusJakartaSans(
-                          color: const Color(0xFF94A3B8),
-                          fontSize: 13,
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 34,
+                          height: 34,
+                          decoration: BoxDecoration(
+                            color: _isSearchFocused
+                                ? AppColors.primaryNavy.withValues(alpha: 0.1)
+                                : const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(
+                            Icons.search_rounded,
+                            color: _isSearchFocused
+                                ? AppColors.primaryNavy
+                                : const Color(0xFF64748B),
+                            size: 19,
+                          ),
                         ),
-                        prefixIcon: const Icon(
-                          Icons.search_rounded,
-                          color: Color(0xFF64748B),
-                          size: 20,
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: TextField(
+                            controller: _searchController,
+                            focusNode: _searchFocusNode,
+                            onChanged: _onSearchChanged,
+                            textInputAction: TextInputAction.search,
+                            onSubmitted: _executeSearch,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 13.5,
+                              color: const Color(0xFF1E293B),
+                              fontWeight: FontWeight.w600,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: 'Cari judul publikasi...',
+                              hintStyle: GoogleFonts.plusJakartaSans(
+                                color: const Color(0xFF94A3B8),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w400,
+                              ),
+                              border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                              errorBorder: InputBorder.none,
+                              disabledBorder: InputBorder.none,
+                              contentPadding: EdgeInsets.zero,
+                              isDense: true,
+                              filled: false,
+                            ),
+                          ),
                         ),
-                        suffixIcon: _searchQuery.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(
-                                  Icons.clear_rounded,
-                                  color: Color(0xFF94A3B8),
-                                  size: 18,
-                                ),
-                                onPressed: () {
-                                  _searchController.clear();
-                                  setState(() {
-                                    _searchQuery = '';
-                                  });
-                                },
-                              )
-                            : null,
-                        border: InputBorder.none,
-                        enabledBorder: InputBorder.none,
-                        focusedBorder: InputBorder.none,
-                        contentPadding:
-                            const EdgeInsets.symmetric(vertical: 11),
-                      ),
+                        if (_searchController.text.isNotEmpty)
+                          IconButton(
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(
+                              minWidth: 32,
+                              minHeight: 32,
+                            ),
+                            icon: Container(
+                              padding: const EdgeInsets.all(3),
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Color(0xFFE2E8F0),
+                              ),
+                              child: const Icon(
+                                Icons.close_rounded,
+                                size: 14,
+                                color: Color(0xFF64748B),
+                              ),
+                            ),
+                            onPressed: () {
+                              _searchController.clear();
+                              _executeSearch('');
+                            },
+                          ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -181,10 +256,19 @@ class _AllPublicationsPageState extends State<AllPublicationsPage> {
                             ),
                             selected: isSelected,
                             onSelected: (selected) {
-                              if (selected) {
+                              if (selected && _selectedYear != year) {
                                 setState(() {
                                   _selectedYear = year;
                                 });
+                                Provider.of<PublicationProvider>(context,
+                                        listen: false)
+                                    .fetchPublications(
+                                  isRefresh: true,
+                                  year: year == 'Semua' ? null : year,
+                                  keyword: _searchQuery.isEmpty
+                                      ? null
+                                      : _searchQuery,
+                                );
                               }
                             },
                             selectedColor: AppColors.primaryNavy,
@@ -262,7 +346,7 @@ class _AllPublicationsPageState extends State<AllPublicationsPage> {
                     ),
                     padding: const EdgeInsets.all(16.0),
                     itemCount: filteredList.length +
-                        (provider.hasMoreData && _searchQuery.isEmpty ? 1 : 0),
+                        (provider.isLoading && provider.hasMoreData ? 1 : 0),
                     itemBuilder: (context, index) {
                       if (index == filteredList.length) {
                         return _buildPaginationLoader();
@@ -489,16 +573,29 @@ class _AllPublicationsPageState extends State<AllPublicationsPage> {
 
   Widget _buildPaginationLoader() {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Shimmer.fromColors(
-        baseColor: Colors.grey.shade200,
-        highlightColor: Colors.grey.shade100,
-        child: Container(
-          height: 90,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-          ),
+      padding: const EdgeInsets.symmetric(vertical: 20),
+      child: Center(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.2,
+                color: AppColors.primaryNavy,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              'Memuat publikasi lainnya...',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 12.5,
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
         ),
       ),
     );

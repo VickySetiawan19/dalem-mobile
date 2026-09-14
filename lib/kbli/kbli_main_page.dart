@@ -232,6 +232,7 @@ class _KbliMainPageState extends State<KbliMainPage>
   }
 
   void _onSearchChanged(String query) {
+    setState(() {});
     if (_debounce?.isActive ?? false) _debounce!.cancel();
 
     _debounce = Timer(const Duration(milliseconds: 300), () {
@@ -497,81 +498,107 @@ class _KbliMainPageState extends State<KbliMainPage>
   }
 
   Widget _buildSearchBar() {
+    final primaryColor = AppColors.primaryNavy;
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
+      height: 52,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: _isSearchFocused
-              ? AppColors.linkAction
-              : AppColors.borderDefault,
-          width: _isSearchFocused ? 1.8 : 1.0,
+          color: _isSearchFocused ? primaryColor : const Color(0xFFE2E8F0),
+          width: _isSearchFocused ? 1.6 : 1.2,
         ),
         boxShadow: [
           BoxShadow(
             color: _isSearchFocused
-                ? AppColors.linkAction.withValues(alpha: 0.12)
+                ? primaryColor.withValues(alpha: 0.12)
                 : Colors.black.withValues(alpha: 0.04),
-            blurRadius: _isSearchFocused ? 12 : 8,
+            blurRadius: _isSearchFocused ? 14 : 8,
             offset: const Offset(0, 3),
           ),
         ],
       ),
-      child: TextField(
-        controller: _searchController,
-        focusNode: _searchFocusNode,
-        onChanged: _onSearchChanged,
-        style: GoogleFonts.plusJakartaSans(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: AppColors.textPrimary,
-        ),
-        decoration: InputDecoration(
-          hintText: _selectedFilter == 'KBLI'
-              ? 'Cari bidang usaha (misal: bengkel, padi, soto)...'
-              : (_selectedFilter == 'KBJI'
-                  ? 'Cari profesi / jabatan (misal: montir, buruh tani)...'
-                  : 'Cari usaha, bengkel, soto, padi, jabatan...'),
-          hintStyle: GoogleFonts.plusJakartaSans(
-            fontSize: 13.5,
-            fontWeight: FontWeight.w400,
-            color: AppColors.textMuted,
-          ),
-          prefixIcon: Padding(
-            padding: const EdgeInsets.only(left: 14, right: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: _isSearchFocused
+                  ? primaryColor.withValues(alpha: 0.1)
+                  : const Color(0xFFF1F5F9),
+              borderRadius: BorderRadius.circular(10),
+            ),
             child: Icon(
               Icons.search_rounded,
-              color: _isSearchFocused
-                  ? AppColors.linkAction
-                  : AppColors.textSecondary,
-              size: 22,
+              color: _isSearchFocused ? primaryColor : const Color(0xFF64748B),
+              size: 20,
             ),
           ),
-          prefixIconConstraints: const BoxConstraints(minWidth: 46, minHeight: 46),
-          suffixIcon: _searchController.text.isNotEmpty
-              ? IconButton(
-                  icon: Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: AppColors.borderDefault,
-                    ),
-                    child: const Icon(
-                      Icons.close_rounded,
-                      size: 16,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  onPressed: () {
-                    _searchController.clear();
-                    _onSearchChanged('');
-                  },
-                )
-              : null,
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
-        ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: TextField(
+              controller: _searchController,
+              focusNode: _searchFocusNode,
+              onChanged: _onSearchChanged,
+              textInputAction: TextInputAction.search,
+              onSubmitted: (val) {
+                if (val.trim().isNotEmpty) {
+                  _performSearch(val.trim());
+                }
+              },
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+              decoration: InputDecoration(
+                hintText: _selectedFilter == 'KBLI'
+                    ? 'Cari bidang usaha (misal: bengkel, padi, soto)...'
+                    : (_selectedFilter == 'KBJI'
+                        ? 'Cari profesi / jabatan (misal: montir, buruh tani)...'
+                        : 'Cari usaha, bengkel, soto, padi, jabatan...'),
+                hintStyle: GoogleFonts.plusJakartaSans(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w400,
+                  color: AppColors.textMuted,
+                ),
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                errorBorder: InputBorder.none,
+                disabledBorder: InputBorder.none,
+                contentPadding: EdgeInsets.zero,
+                isDense: true,
+                filled: false,
+              ),
+            ),
+          ),
+          if (_searchController.text.isNotEmpty)
+            IconButton(
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+              icon: Container(
+                padding: const EdgeInsets.all(3),
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color(0xFFE2E8F0),
+                ),
+                child: const Icon(
+                  Icons.close_rounded,
+                  size: 14,
+                  color: Color(0xFF64748B),
+                ),
+              ),
+              onPressed: () {
+                _searchController.clear();
+                _onSearchChanged('');
+              },
+            ),
+        ],
       ),
     );
   }
