@@ -287,19 +287,18 @@ class _KbliMainPageState extends State<KbliMainPage>
         physics: const BouncingScrollPhysics(),
         slivers: [
           // Header Hero Banner with Curved Bottom
+          // Header Hero Banner with Embedded Search Bar
           SliverToBoxAdapter(
             child: _buildHeroHeader(),
           ),
 
-          // Search & Filter Card with comfortable top spacing
+          // Filter Chips & Quick Actions Hub
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16.0, 18.0, 16.0, 0),
+              padding: const EdgeInsets.fromLTRB(16.0, 14.0, 16.0, 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildSearchBar(),
-                  const SizedBox(height: 12),
                   // Filter Chips (Retained Horizontal Scrollable Chips)
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
@@ -314,9 +313,9 @@ class _KbliMainPageState extends State<KbliMainPage>
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 14),
                   _buildQuickActionHub(),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 14),
                   if (_statusMessage != null) _buildStatusAlert(),
                 ],
               ),
@@ -357,8 +356,8 @@ class _KbliMainPageState extends State<KbliMainPage>
             top: -30,
             right: -30,
             child: Container(
-              width: 130,
-              height: 130,
+              width: 140,
+              height: 140,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Colors.white.withValues(alpha: 0.035),
@@ -369,15 +368,16 @@ class _KbliMainPageState extends State<KbliMainPage>
           // Main Header Content
           Padding(
             padding: EdgeInsets.fromLTRB(
-              20,
-              MediaQuery.of(context).padding.top + 16,
-              20,
-              22,
+              16,
+              MediaQuery.of(context).padding.top + 14,
+              16,
+              18,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Expanded(
                       child: Column(
@@ -419,7 +419,7 @@ class _KbliMainPageState extends State<KbliMainPage>
                           Text(
                             'Klasifikasi Cerdas • BPS Kabupaten Demak',
                             style: GoogleFonts.plusJakartaSans(
-                              fontSize: 12.5,
+                              fontSize: 12,
                               fontWeight: FontWeight.w500,
                               color: Colors.white.withValues(alpha: 0.85),
                             ),
@@ -431,7 +431,7 @@ class _KbliMainPageState extends State<KbliMainPage>
 
                     // Network Status Pill
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                       decoration: BoxDecoration(
                         color: _isOnline
                             ? AppColors.statusOnline.withValues(alpha: 0.2)
@@ -447,8 +447,8 @@ class _KbliMainPageState extends State<KbliMainPage>
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Container(
-                            width: 7.5,
-                            height: 7.5,
+                            width: 7,
+                            height: 7,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: _isOnline
@@ -466,11 +466,11 @@ class _KbliMainPageState extends State<KbliMainPage>
                               ],
                             ),
                           ),
-                          const SizedBox(width: 6),
+                          const SizedBox(width: 5),
                           Text(
                             _isOnline ? 'Online AI' : 'Offline FTS5',
                             style: GoogleFonts.plusJakartaSans(
-                              fontSize: 11,
+                              fontSize: 10.5,
                               fontWeight: FontWeight.w700,
                               color: Colors.white,
                             ),
@@ -481,14 +481,8 @@ class _KbliMainPageState extends State<KbliMainPage>
                   ],
                 ),
                 const SizedBox(height: 14),
-                Text(
-                  'Temukan kode KBLI 2025 & KBJI 2014 secara cepat dan akurat.',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 13,
-                    color: Colors.white.withValues(alpha: 0.85),
-                    height: 1.4,
-                  ),
-                ),
+                // Seamless Embedded Search Bar
+                _buildSearchBar(),
               ],
             ),
           ),
@@ -685,8 +679,8 @@ class _KbliMainPageState extends State<KbliMainPage>
         const SizedBox(width: 10),
         Expanded(
           child: _buildActionCard(
-            title: 'Catatan Lapangan',
-            subtitle: 'Crowdsourcing',
+            title: 'Catatan Usaha',
+            subtitle: 'Usulan Baru',
             icon: Icons.edit_note_rounded,
             badge: 'Baru',
             accentColor: AppColors.campaignOrange,
