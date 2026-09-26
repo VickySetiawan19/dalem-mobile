@@ -138,6 +138,8 @@ class _ForecastingChartViewState extends State<ForecastingChartView> {
           if (_showDetailsTable) ...[
             const SizedBox(height: 12),
             _buildHistoricalTable(result),
+            const SizedBox(height: 12),
+            _buildEducationalGuideCard(),
           ],
         ],
       ),
@@ -417,15 +419,31 @@ class _ForecastingChartViewState extends State<ForecastingChartView> {
                   Row(
                     children: [
                       Expanded(
-                        child: Text(
-                          'Akurasi Model',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF64748B),
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                'Akurasi Model',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF64748B),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            GestureDetector(
+                              onTap: () => _showMapeExplanationModal(context),
+                              child: const Icon(
+                                Icons.help_outline_rounded,
+                                size: 13,
+                                color: Color(0xFF94A3B8),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       const SizedBox(width: 4),
@@ -1167,6 +1185,264 @@ class _ForecastingChartViewState extends State<ForecastingChartView> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildEducationalGuideCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEFF6FF),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.menu_book_rounded,
+                  size: 16,
+                  color: Color(0xFF2563EB),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Panduan Membaca Evaluasi & Istilah Model',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF1E293B),
+                      ),
+                    ),
+                    Text(
+                      'Penjelasan praktis untuk memahami metrik & tabel di atas',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 10,
+                        color: const Color(0xFF64748B),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Divider(height: 1, color: Color(0xFFE2E8F0)),
+          const SizedBox(height: 10),
+
+          // Item 1: Aktual vs Model & Error
+          _buildGuideItem(
+            title: '1. Aktual (Yt) vs Model (Ft) & Deviasi',
+            description:
+                '• Aktual (Yt): Angka riil resmi hasil publikasi BPS pada tahun tersebut.\n'
+                '• Model (Ft): Nilai yang dihitung kembali oleh rumus Holt\'s DES.\n'
+                '• Error & Deviasi (%): Selisih antara angka riil dan hasil hitungan model. '
+                'Semakin kecil deviasinya, semakin dekat garis model dengan data sebenarnya.',
+          ),
+          const SizedBox(height: 8),
+
+          // Item 2: MAPE & Kriteria Lewis (1982)
+          _buildGuideItem(
+            title: '2. Apa itu MAPE & Standar Lewis (1982)?',
+            description:
+                'Mean Absolute Percentage Error (MAPE) adalah rata-rata persentase selisih perkiraan. '
+                'Menurut rujukan ilmiah Lewis (1982):\n'
+                '  • < 10% : Sangat Baik (Sangat Akurat)\n'
+                '  • 10% – 20% : Baik (Akurat)\n'
+                '  • 20% – 50% : Wajar (Layak Digunakan)\n'
+                '  • > 50% : Fluktuatif (Data historis bergejolak tajam antar-tahun, sehingga proyeksi dijadikan indikasi tren awal).',
+          ),
+          const SizedBox(height: 8),
+
+          // Item 3: Parameter Alpha & Beta
+          _buildGuideItem(
+            title: '3. Bobot Level (α) & Bobot Tren (β)',
+            description:
+                '• Alpha (α): Mengatur seberapa kuat data tahun terbaru memengaruhi ramalan.\n'
+                '• Beta (β): Mengatur seberapa responsif model mengikuti laju tren naik/turun.\n'
+                '• Auto Grid-Search secara otomatis menguji puluhan kombinasi parameter untuk menemukan setelan dengan nilai simpangan (MAPE) terendah.',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGuideItem({required String title, required String description}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFF1F5F9)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF0F172A),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            description,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 10.5,
+              color: const Color(0xFF475569),
+              height: 1.45,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showMapeExplanationModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFCBD5E1),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEFF6FF),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.help_outline_rounded,
+                      color: Color(0xFF1D4ED8),
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    'Apa itu Akurasi Model & MAPE?',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF0F172A),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'MAPE (Mean Absolute Percentage Error) mengukur seberapa jauh perkiraan model meleset dari data riil dalam bentuk persentase.',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 12,
+                  color: const Color(0xFF334155),
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Column(
+                  children: [
+                    _buildLewisRow('< 10%', 'Sangat Baik (Sangat Akurat)', const Color(0xFF059669)),
+                    const Divider(height: 12, color: Color(0xFFE2E8F0)),
+                    _buildLewisRow('10% – 20%', 'Baik (Akurat)', const Color(0xFF2563EB)),
+                    const Divider(height: 12, color: Color(0xFFE2E8F0)),
+                    _buildLewisRow('20% – 50%', 'Wajar (Layak Digunakan)', const Color(0xFFD97706)),
+                    const Divider(height: 12, color: Color(0xFFE2E8F0)),
+                    _buildLewisRow('> 50%', 'Fluktuatif (Tren Berubah Cepat)', const Color(0xFFDC2626)),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryNavy,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: Text(
+                    'Mengerti',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildLewisRow(String range, String label, Color color) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          range,
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 11.5,
+            fontWeight: FontWeight.w700,
+            color: const Color(0xFF1E293B),
+          ),
+        ),
+        Text(
+          label,
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: color,
+          ),
+        ),
+      ],
     );
   }
 }
