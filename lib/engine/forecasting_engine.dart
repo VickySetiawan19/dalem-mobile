@@ -205,14 +205,31 @@ class ForecastingEngine {
     final lastVal = data.last.value;
     final delta = nextVal - lastVal;
     final deltaSign = delta >= 0 ? '+' : '';
-
     final unitStr = unit.isNotEmpty ? ' $unit' : '';
+
+    final String recommendation;
+    if (metrics.mape < 10.0) {
+      recommendation =
+          'Tingkat akurasi model tergolong ${metrics.category} dengan nilai MAPE sebesar ${metrics.mape}%, '
+          'sehingga hasil proyeksi ini sangat andal sebagai rujukan strategis perencanaan kebijakan Kabupaten Demak.';
+    } else if (metrics.mape <= 20.0) {
+      recommendation =
+          'Tingkat akurasi model tergolong ${metrics.category} dengan nilai MAPE sebesar ${metrics.mape}%, '
+          'sehingga proyeksi ini memiliki keandalan yang baik sebagai dasar perumusan program kerja daerah.';
+    } else if (metrics.mape <= 50.0) {
+      recommendation =
+          'Tingkat akurasi model tergolong ${metrics.category} dengan nilai MAPE sebesar ${metrics.mape}%, '
+          'sehingga proyeksi ini layak digunakan sebagai estimasi pembanding dengan memperhatikan dinamika indikator terkait.';
+    } else {
+      recommendation =
+          'Tingkat akurasi model tergolong ${metrics.category} dengan nilai MAPE sebesar ${metrics.mape}% akibat fluktuasi historis yang tajam, '
+          'sehingga hasil proyeksi sebaiknya dijadikan indikasi tren awal sembari menunggu pembaruan rilis data resmi BPS berikutnya.';
+    }
 
     return 'Berdasarkan pemodelan Double Exponential Smoothing (Holt\'s Method) dengan parameter '
         'α=$alpha dan β=$beta, indikator $indicatorTitle menunjukkan pola $trendDirection. '
         'Pada tahun $nextYear, nilai diproyeksikan sebesar $nextVal$unitStr ($deltaSign${delta.toStringAsFixed(2)}$unitStr dibandingkan tahun ${data.last.period}). '
-        'Tingkat akurasi model tergolong ${metrics.category} dengan nilai MAPE sebesar ${metrics.mape}%, '
-        'sehingga hasil proyeksi ini sangat valid sebagai bahan rujukan perencanaan kebijakan daerah Kabupaten Demak.';
+        '$recommendation';
   }
 
   /// Public API: Run Double Exponential Smoothing with auto-optimization if parameters omitted.

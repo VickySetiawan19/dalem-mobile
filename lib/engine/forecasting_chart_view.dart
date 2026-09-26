@@ -133,7 +133,7 @@ class _ForecastingChartViewState extends State<ForecastingChartView> {
           _buildNarrativeCard(result),
           const SizedBox(height: 16),
 
-          // Toggle & Historical Fit Table (Uji Akurasi Bab 4)
+          // Toggle & Historical Fit Table (Evaluasi Model & Uji Akurasi)
           _buildTableToggle(),
           if (_showDetailsTable) ...[
             const SizedBox(height: 12),
@@ -299,7 +299,7 @@ class _ForecastingChartViewState extends State<ForecastingChartView> {
             // Card 1: Hasil Proyeksi Tahun Depan
             Container(
               width: cardWidth,
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
                   colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
@@ -319,16 +319,20 @@ class _ForecastingChartViewState extends State<ForecastingChartView> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'Proyeksi ${nextForecast?.period ?? '-'}',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF94A3B8),
+                      Expanded(
+                        child: Text(
+                          'Proyeksi ${nextForecast?.period ?? '-'}',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF94A3B8),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
+                      const SizedBox(width: 4),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
@@ -353,14 +357,20 @@ class _ForecastingChartViewState extends State<ForecastingChartView> {
                     crossAxisAlignment: CrossAxisAlignment.baseline,
                     textBaseline: TextBaseline.alphabetic,
                     children: [
-                      Text(
-                        nextForecast != null
-                            ? ChartDataParser.formatIndonesianNumber(nextForecast.value)
-                            : '-',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
+                      Flexible(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            nextForecast != null
+                                ? ChartDataParser.formatIndonesianNumber(nextForecast.value)
+                                : '-',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                            ),
+                          ),
                         ),
                       ),
                       if (result.unit.isNotEmpty) ...[
@@ -372,6 +382,8 @@ class _ForecastingChartViewState extends State<ForecastingChartView> {
                             fontWeight: FontWeight.w600,
                             color: const Color(0xFF94A3B8),
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ],
@@ -383,6 +395,8 @@ class _ForecastingChartViewState extends State<ForecastingChartView> {
                       fontSize: 10,
                       color: const Color(0xFF64748B),
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
@@ -391,7 +405,7 @@ class _ForecastingChartViewState extends State<ForecastingChartView> {
             // Card 2: Akurasi / Error Model (MAPE)
             Container(
               width: cardWidth,
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               decoration: BoxDecoration(
                 color: const Color(0xFFF8FAFC),
                 borderRadius: BorderRadius.circular(16),
@@ -401,16 +415,20 @@ class _ForecastingChartViewState extends State<ForecastingChartView> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'Akurasi Model',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF64748B),
+                      Expanded(
+                        child: Text(
+                          'Akurasi Model',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF64748B),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
+                      const SizedBox(width: 4),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
@@ -449,14 +467,20 @@ class _ForecastingChartViewState extends State<ForecastingChartView> {
                     crossAxisAlignment: CrossAxisAlignment.baseline,
                     textBaseline: TextBaseline.alphabetic,
                     children: [
-                      Text(
-                        result.metrics.mape > 100.0
-                            ? '${result.metrics.mape.toStringAsFixed(1)}%'
-                            : '${result.metrics.accuracyScore.toStringAsFixed(1)}%',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w800,
-                          color: const Color(0xFF0F172A),
+                      Flexible(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            result.metrics.mape > 100.0
+                                ? '${result.metrics.mape.toStringAsFixed(1)}%'
+                                : '${result.metrics.accuracyScore.toStringAsFixed(1)}%',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w800,
+                              color: const Color(0xFF0F172A),
+                            ),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 4),
@@ -478,6 +502,8 @@ class _ForecastingChartViewState extends State<ForecastingChartView> {
                       fontWeight: FontWeight.w500,
                       color: const Color(0xFF64748B),
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
@@ -510,23 +536,30 @@ class _ForecastingChartViewState extends State<ForecastingChartView> {
     final allValues = [
       ...hist.map((p) => p.value),
       ...fore.map((p) => p.value),
-      ...fore.map((p) => p.lowerBound),
-      ...fore.map((p) => p.upperBound),
     ];
-    final double rawMinY = allValues.reduce(min);
-    final double rawMaxY = allValues.reduce(max);
-    final double yRange = (rawMaxY - rawMinY).abs();
-    final double yMargin = yRange > 0 ? yRange * 0.18 : 1.0;
+    final double dataMin = allValues.reduce(min);
+    final double dataMax = allValues.reduce(max);
+    final double rawRange = (dataMax - dataMin).abs() <= 0.0001 ? 10.0 : (dataMax - dataMin).abs();
 
-    // Critical fix: If data contains negative values, finalMinY must be negative!
-    final double finalMinY;
-    if (rawMinY < 0) {
-      finalMinY = rawMinY - yMargin;
-    } else {
-      finalMinY = (rawMinY - yMargin > 0) ? (rawMinY - yMargin) : 0.0;
+    // Add headroom so top and bottom points don't touch the edges
+    final double paddedMin = (dataMin < 0)
+        ? (dataMin - rawRange * 0.15)
+        : (dataMin - rawRange * 0.15 > 0 ? dataMin - rawRange * 0.15 : 0.0);
+    final double paddedMax = dataMax + rawRange * 0.15;
+
+    final double yRange = (paddedMax - paddedMin) <= 0 ? 10.0 : (paddedMax - paddedMin);
+    final double yInterval = ChartDataParser.calculateNiceYInterval(yRange, targetTicks: 4);
+
+    // Align finalMinY and finalMaxY strictly to exact integer multiples of yInterval!
+    final double finalMinY = (paddedMin / yInterval).floorToDouble() * yInterval;
+    double finalMaxY = (paddedMax / yInterval).ceilToDouble() * yInterval;
+    if (finalMaxY <= finalMinY) {
+      finalMaxY = finalMinY + (yInterval * 4);
     }
-    final double finalMaxY = rawMaxY + yMargin;
-    final double yInterval = (finalMaxY - finalMinY) > 0 ? (finalMaxY - finalMinY) / 4 : 1.0;
+    final int yDecimals = (yInterval < 0.1) ? 2 : (yInterval < 1.0 ? 1 : 0);
+    final double leftReservedSize = (finalMaxY.abs() >= 10000 || finalMinY.abs() >= 10000)
+        ? 52.0
+        : (finalMaxY.abs() >= 100 || finalMinY.abs() >= 100 ? 44.0 : 38.0);
 
     return AspectRatio(
       aspectRatio: 1.45,
@@ -538,16 +571,17 @@ class _ForecastingChartViewState extends State<ForecastingChartView> {
             drawVerticalLine: false,
             horizontalInterval: yInterval,
             getDrawingHorizontalLine: (val) {
-              if (val.abs() < 0.1) {
+              final isZero = val.abs() < (yInterval * 0.05);
+              if (isZero && finalMinY < 0) {
                 // Prominent baseline at Y = 0
-                return FlLine(
-                  color: const Color(0xFF94A3B8),
+                return const FlLine(
+                  color: Color(0xFF94A3B8),
                   strokeWidth: 1.5,
                   dashArray: [4, 4],
                 );
               }
-              return FlLine(
-                color: const Color(0xFFF1F5F9),
+              return const FlLine(
+                color: Color(0xFFF1F5F9),
                 strokeWidth: 1,
               );
             },
@@ -596,15 +630,33 @@ class _ForecastingChartViewState extends State<ForecastingChartView> {
             leftTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
-                reservedSize: 42,
+                reservedSize: leftReservedSize,
                 interval: yInterval,
                 getTitlesWidget: (val, meta) {
+                  // Only render ticks that are aligned to multiples of yInterval
+                  final remainder = (val - finalMinY).abs() % yInterval;
+                  final isNearTick = remainder < (yInterval * 0.05) ||
+                      (yInterval - remainder).abs() < (yInterval * 0.05);
+                  if (!isNearTick) {
+                    return const SizedBox.shrink();
+                  }
+
+                  // Avoid collision near the top if fl_chart draws an extra meta.max tick
+                  if ((val - meta.max).abs() < (yInterval * 0.3) && (val - meta.max).abs() > 0.0001) {
+                    return const SizedBox.shrink();
+                  }
+
+                  final isZero = val.abs() < (yInterval * 0.01);
                   return Text(
-                    ChartDataParser.formatIndonesianNumber(val, maxDecimals: 1),
+                    ChartDataParser.formatIndonesianNumber(val, maxDecimals: yDecimals),
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 10,
-                      fontWeight: FontWeight.w500,
-                      color: const Color(0xFF94A3B8),
+                      fontWeight: (isZero && finalMinY < 0)
+                          ? FontWeight.w700
+                          : FontWeight.w500,
+                      color: (isZero && finalMinY < 0)
+                          ? const Color(0xFF334155)
+                          : const Color(0xFF94A3B8),
                     ),
                   );
                 },
@@ -993,26 +1045,33 @@ class _ForecastingChartViewState extends State<ForecastingChartView> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.assessment_outlined,
-                  size: 16,
-                  color: AppColors.primaryNavy,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  _showDetailsTable
-                      ? 'Sembunyikan Tabel Evaluasi Error (Bab 4)'
-                      : 'Lihat Tabel Uji Akurasi & Deviasi Model (Bab 4 TA)',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
+            Expanded(
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.assessment_outlined,
+                    size: 16,
                     color: AppColors.primaryNavy,
                   ),
-                ),
-              ],
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _showDetailsTable
+                          ? 'Sembunyikan Tabel Evaluasi Model'
+                          : 'Lihat Tabel Evaluasi & Uji Deviasi Model',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primaryNavy,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
             ),
+            const SizedBox(width: 8),
             Icon(
               _showDetailsTable ? Icons.expand_less_rounded : Icons.expand_more_rounded,
               color: AppColors.primaryNavy,
