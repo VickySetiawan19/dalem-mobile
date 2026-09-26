@@ -2,11 +2,8 @@ import 'package:Dalem/components/bar.dart';
 import 'package:Dalem/components/bottom_nav.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:Dalem/components/offline_storage.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:io';
 import 'package:csv/csv.dart';
@@ -14,6 +11,9 @@ import 'package:Dalem/components/app_colors.dart';
 import 'package:Dalem/config/api_config.dart';
 import 'package:Dalem/charts/chart_data_parser.dart';
 import 'package:Dalem/charts/interactive_chart_view.dart';
+import 'package:Dalem/engine/forecasting_chart_view.dart';
+import 'package:Dalem/services/bps_api_service.dart';
+import 'package:Dalem/components/offline_banner_widget.dart';
 
 class DataTableScreen extends StatefulWidget {
   final String id;
@@ -60,28 +60,7 @@ class DataTableScreenState extends State<DataTableScreen> {
   }
 
   Future<Map<String, dynamic>> _fetchWithCache(String url) async {
-    try {
-      final response = await http.get(Uri.parse(url)).timeout(
-            const Duration(seconds: 12),
-          );
-      if (response.statusCode == 200) {
-        final jsonResponse = json.decode(response.body);
-        final Map<String, dynamic> castedResponse =
-            (jsonResponse as Map).cast<String, dynamic>();
-        await OfflineStorage.saveData(url, castedResponse);
-        return castedResponse;
-      } else {
-        throw Exception(
-            'Gagal mengambil data dari API, status: ${response.statusCode}');
-      }
-    } catch (e) {
-      final offlineData = await OfflineStorage.loadData(url);
-      if (offlineData != null) {
-        return offlineData.cast<String, dynamic>();
-      } else {
-        rethrow;
-      }
-    }
+    return BpsApiService.fetchJson(url);
   }
 
   Future<Map<String, dynamic>> fetchDataTable() async {
@@ -130,7 +109,7 @@ class DataTableScreenState extends State<DataTableScreen> {
     }
   }
 
-  Widget _buildViewModeToggle() {
+  Widget _buildViewModeToggle({bool hasForecasting = false}) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(4),
@@ -141,6 +120,7 @@ class DataTableScreenState extends State<DataTableScreen> {
       ),
       child: Row(
         children: [
+          // 0: Tabel Data
           Expanded(
             child: InkWell(
               onTap: () {
@@ -177,14 +157,14 @@ class DataTableScreenState extends State<DataTableScreen> {
                   children: [
                     Icon(
                       Icons.table_chart_rounded,
-                      size: 16,
+                      size: 15,
                       color: _selectedViewMode == 0 ? Colors.white : const Color(0xFF475569),
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 4),
                     Text(
-                      'Tabel Data',
+                      'Tabel',
                       style: GoogleFonts.plusJakartaSans(
-                        fontSize: 13,
+                        fontSize: 12.5,
                         fontWeight: _selectedViewMode == 0 ? FontWeight.w700 : FontWeight.w600,
                         color: _selectedViewMode == 0 ? Colors.white : const Color(0xFF475569),
                       ),
@@ -194,6 +174,7 @@ class DataTableScreenState extends State<DataTableScreen> {
               ),
             ),
           ),
+          // 1: Grafik Interaktif
           Expanded(
             child: InkWell(
               onTap: () {
@@ -230,14 +211,14 @@ class DataTableScreenState extends State<DataTableScreen> {
                   children: [
                     Icon(
                       Icons.insights_rounded,
-                      size: 16,
+                      size: 15,
                       color: _selectedViewMode == 1 ? Colors.white : const Color(0xFF475569),
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 4),
                     Text(
-                      'Grafik Interaktif',
+                      'Grafik',
                       style: GoogleFonts.plusJakartaSans(
-                        fontSize: 13,
+                        fontSize: 12.5,
                         fontWeight: _selectedViewMode == 1 ? FontWeight.w700 : FontWeight.w600,
                         color: _selectedViewMode == 1 ? Colors.white : const Color(0xFF475569),
                       ),
@@ -247,6 +228,61 @@ class DataTableScreenState extends State<DataTableScreen> {
               ),
             ),
           ),
+          // 2: Proyeksi Tren (Holt's DES)
+          if (hasForecasting)
+            Expanded(
+              child: InkWell(
+                onTap: () {
+                  if (_selectedViewMode != 2) {
+                    setState(() {
+                      _selectedViewMode = 2;
+                    });
+                  }
+                },
+                borderRadius: BorderRadius.circular(10),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(vertical: 9),
+                  decoration: BoxDecoration(
+                    gradient: _selectedViewMode == 2
+                        ? const LinearGradient(
+                            colors: [Color(0xFFE8611A), Color(0xFFF97316)],
+                          )
+                        : null,
+                    color: _selectedViewMode == 2 ? null : Colors.transparent,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: _selectedViewMode == 2
+                        ? [
+                            BoxShadow(
+                              color: const Color(0xFFE8611A).withValues(alpha: 0.3),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.auto_graph_rounded,
+                        size: 15,
+                        color: _selectedViewMode == 2 ? Colors.white : const Color(0xFFE8611A),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Proyeksi',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 12.5,
+                          fontWeight: _selectedViewMode == 2 ? FontWeight.w700 : FontWeight.w600,
+                          color: _selectedViewMode == 2 ? Colors.white : const Color(0xFFB45309),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -1311,6 +1347,10 @@ class DataTableScreenState extends State<DataTableScreen> {
             }
 
             final bool hasChartData = chartSeries.isNotEmpty;
+            final bool hasForecastingData = chartSeries.any((s) {
+              final yearCount = s.points.where((p) => RegExp(r'\b(19|20\d{2})\b').hasMatch(p.label)).length;
+              return yearCount >= 2;
+            });
             final activeViewMode = hasChartData ? _selectedViewMode : 0;
 
             return SingleChildScrollView(
@@ -1319,15 +1359,38 @@ class DataTableScreenState extends State<DataTableScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 1. View Mode Switcher: [ Tabel Data ] | [ Grafik Interaktif ]
+                  if (data['_is_offline'] == true)
+                    OfflineBannerWidget(
+                      message: data['_offline_source'] == 'seed'
+                          ? 'Server BPS tidak merespons. Menampilkan data cadangan Kabupaten Demak.'
+                          : 'Server BPS tidak merespons. Menampilkan data tersimpan terakhir.',
+                      onRefresh: () {
+                        setState(() {
+                          futureDataTable = fetchDataTable();
+                        });
+                      },
+                    ),
+
+                  // 1. View Mode Switcher: [ Tabel ] | [ Grafik ] | [ Proyeksi (AI) ]
                   // Only display toggle if valid chart series exists (Smart Adaptive UI)
-                  if (hasChartData) _buildViewModeToggle(),
+                  if (hasChartData) _buildViewModeToggle(hasForecasting: hasForecastingData),
 
-                  if (widget.tableType == '3') _buildYearSelector(),
-                  if (widget.tableType == '2') ..._buildDynamicYearSelectorFromData(data),
-                  if (widget.tableType == '1') _buildStaticYearBadge(widget.title, (data['data'] as Map?)?['updt_date']?.toString()),
+                  if (activeViewMode != 2 && widget.tableType == '3') _buildYearSelector(),
+                  if (activeViewMode != 2 && widget.tableType == '2') ..._buildDynamicYearSelectorFromData(data),
+                  if (activeViewMode != 2 && widget.tableType == '1') _buildStaticYearBadge(widget.title, (data['data'] as Map?)?['updt_date']?.toString()),
 
-                  if (activeViewMode == 1 && hasChartData) ...[
+                  if (activeViewMode == 2 && hasForecastingData) ...[
+                    ForecastingChartView(
+                      title: simdasiTableObj?['judul_tabel']?.toString() ?? widget.title,
+                      seriesList: chartSeries.where((s) {
+                        final yearCount = s.points.where((p) => RegExp(r'\b(19|20\d{2})\b').hasMatch(p.label)).length;
+                        return yearCount >= 2;
+                      }).toList(),
+                      subtitle: widget.tableType == '3'
+                          ? 'Model Holt\'s Double Exponential Smoothing • BPS Kab. Demak'
+                          : 'Proyeksi Deret Waktu (Time-Series) BPS Demak',
+                    ),
+                  ] else if (activeViewMode == 1 && hasChartData) ...[
                     InteractiveChartView(
                       title: simdasiTableObj?['judul_tabel']?.toString() ?? widget.title,
                       seriesList: chartSeries,

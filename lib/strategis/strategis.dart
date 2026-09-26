@@ -9,6 +9,7 @@ import 'package:Dalem/components/bps_theme.dart';
 import 'package:Dalem/config/api_config.dart';
 import 'package:Dalem/components/state_widgets.dart';
 import 'package:Dalem/services/bps_api_service.dart';
+import 'package:Dalem/components/offline_banner_widget.dart';
 import 'package:Dalem/utils/page_transitions.dart';
 
 class Strategis extends StatefulWidget {
@@ -18,7 +19,7 @@ class Strategis extends StatefulWidget {
   const Strategis({super.key, required this.title, required this.color});
 
   @override
-  _StrategisState createState() => _StrategisState();
+  State<Strategis> createState() => _StrategisState();
 }
 
 class _StrategisState extends State<Strategis> {
@@ -105,14 +106,24 @@ class _StrategisState extends State<Strategis> {
                 ],
               );
             } else {
+              final isOffline = snapshot.data!['_is_offline'] == true;
               final items = snapshot.data!['data'][1] as List<dynamic>;
               return ListView.builder(
                 physics: const AlwaysScrollableScrollPhysics(
                     parent: BouncingScrollPhysics()),
                 padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                itemCount: items.length,
+                itemCount: items.length + (isOffline ? 1 : 0),
                 itemBuilder: (context, index) {
-                  var item = items[index];
+                  if (isOffline && index == 0) {
+                    return OfflineBannerWidget(
+                      message: snapshot.data!['_offline_source'] == 'seed'
+                          ? 'Server BPS tidak merespons. Menampilkan data bawaan Kabupaten Demak.'
+                          : 'Server BPS tidak merespons. Menampilkan data tersimpan terakhir.',
+                      onRefresh: _handleRefresh,
+                    );
+                  }
+                  final itemIndex = isOffline ? index - 1 : index;
+                  var item = items[itemIndex];
                   var decodedId = utf8.decode(base64.decode(item['id'].toString()));
                   var arrayId = decodedId.split('#');
                   var id = arrayId[0];
