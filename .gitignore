@@ -50,3 +50,7 @@ app.*.map.json
 key.properties
 *.jks
 *.keystore
+
+# Academic notes
+pelengkap_tugas_akhir_bps_dalem.md
+*tugas_akhir*
